@@ -58,17 +58,36 @@ model.save('cnn_model.keras')
 
 test_loss, test_acc = model.evaluate(test_images, labels_test, verbose=0)
 
-# TODO validate on the test set and record findings / loss and accuracy curves for report
-val_acc = history.history.get('val_accuracy', history.history.get('val_acc'))
-epochs = range(1, len(val_acc) + 1)
+train_acc = history.history.get('accuracy') or history.history.get('acc')
+val_acc = history.history.get('val_accuracy') or history.history.get('val_acc')
+train_loss = history.history.get('loss')
+val_loss = history.history.get('val_loss')
 
-plt.figure()
-plt.plot(epochs, val_acc, 'b-', label='Validation accuracy')
-plt.hlines(test_acc, epochs[0], epochs[-1], colors='r', linestyles='--', label=f'Test accuracy = {test_acc:.4f}')
-plt.title('Validation accuracy per epoch and final test accuracy')
-plt.xlabel('Epoch')
-plt.ylabel('Accuracy')
-plt.legend()
-plt.grid(True)
-plt.savefig('accuracy_plot_cnn_k=3.png')
+epochs_range = range(1, len(train_acc) + 1)
+
+# Plot accuracy and loss
+fig, axs = plt.subplots(1, 2, figsize=(12, 4))
+
+# Accuracy plot
+axs[0].plot(epochs_range, train_acc, 'o-', label='Train accuracy')
+axs[0].plot(epochs_range, val_acc, 's-', label='Validation accuracy')
+axs[0].hlines(test_acc, epochs_range[0], epochs_range[-1], colors='r', linestyles='--',
+              label=f'Test accuracy = {test_acc:.4f}')
+axs[0].set_title('Accuracy')
+axs[0].set_xlabel('Epoch')
+axs[0].set_ylabel('Accuracy')
+axs[0].legend()
+axs[0].grid(True)
+
+# Loss plot
+axs[1].plot(epochs_range, train_loss, 'o-', label='Train loss')
+axs[1].plot(epochs_range, val_loss, 's-', label='Validation loss')
+axs[1].set_title('Loss')
+axs[1].set_xlabel('Epoch')
+axs[1].set_ylabel('Loss')
+axs[1].legend()
+axs[1].grid(True)
+
+plt.tight_layout()
+plt.savefig('accuracy_loss_cnn.png')
 plt.show()
