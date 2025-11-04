@@ -16,8 +16,8 @@ Source:
 - The plots were created with ChatGPT
 
 ### Kernel 
-1. Linear: $$ \langle x, x' \rangle $$
-2. RBF radial basis function kernel: $$ \exp\!\big(-\gamma \, \lVert x_i - x_j \rVert^2\big) $$
+1. Linear
+2. RBF radial basis function kernel
 
 #### C 
 C is the weight for misclassification of training examples. A high C, means that misclassifications are highly weighted. If C is to high, this leads to overfitting the model. 
