@@ -1,6 +1,7 @@
 #from tensorflow import datasets, layers, models
 import matplotlib.pyplot as plt
 from keras import layers, models
+from keras.optimizers import Adam
 from sklearn.model_selection import train_test_split
 import numpy as np
 import sys
@@ -8,7 +9,12 @@ from pathlib import Path
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 import utils.data_loader as data_loader
 
-
+config = {
+    "num_conv_layers": 3,        # number of Conv2D + MaxPool blocks
+    "kernel_size": (7, 7),       # kernel size for all conv layers
+    "learning_rate": 1e-4,       # optimizer learning rate
+    "epochs": 5,
+}
 
 
 X_train, y_train, X_val, y_val = data_loader.get_train_and_validation_set() 
@@ -26,30 +32,42 @@ X_train = ensure_4d(X_train)
 X_val   = ensure_4d(X_val)
 X_test  = ensure_4d(X_test)
 
-# Define a simple CNN model
-model = models.Sequential([
-    layers.Conv2D(32, (3, 3), activation='relu', input_shape=(28, 28, 1)),
-    layers.MaxPooling2D((2, 2)),
-    layers.Conv2D(64, (3, 3), activation='relu'),
-    layers.MaxPooling2D((2, 2)),
-    layers.Flatten(),
-    layers.Dense(64, activation='relu'),
-    layers.Dense(10, activation='softmax')  # 10 classes for MNIST digits (0-9)
-])
+def build_cnn(num_conv_layers=3, kernel_size=(3,3), input_shape=(28,28,1), num_classes=10, filters_start=32):
+    """
+    Build a Sequential CNN with `num_conv_layers` Conv2D+MaxPool blocks.
+    Each block doubles the number of filters starting from filters_start.
+    """
+    model = models.Sequential()
+    for i in range(num_conv_layers):
+        filters = int(filters_start * (2 ** i))
+        if i == 0:
+            model.add(layers.Conv2D(filters, kernel_size, activation='relu', padding='same', input_shape=input_shape))
+        else:
+            model.add(layers.Conv2D(filters, kernel_size, activation='relu', padding='same'))
+        model.add(layers.MaxPooling2D((2, 2)))
+    model.add(layers.Flatten())
+    model.add(layers.Dense(64, activation='relu'))
+    model.add(layers.Dense(num_classes, activation='softmax'))
+    return model
 
+# Build and compile the model using config values
+model = build_cnn(num_conv_layers=config["num_conv_layers"],
+                  kernel_size=config["kernel_size"],
+                  input_shape=(28,28,1))
 
-# Compile the model
-model.compile(optimizer='adam',
-              loss='sparse_categorical_crossentropy',  # For integer labels
+optimizer = Adam(learning_rate=config["learning_rate"])
+model.compile(optimizer=optimizer,
+              loss='sparse_categorical_crossentropy',
               metrics=['accuracy'])
 
 # Train the model
 history = model.fit(X_train, y_train,
                     validation_data=(X_val, y_val),
-                    epochs=5, batch_size=32)
+                    epochs=config["epochs"],
+                    batch_size=32)
 
 # Save the trained model
-model.save('CNN/cnn_model.keras')
+model.save(f'CNN/cnn_modelk{config["kernel_size"]}l{config["num_conv_layers"]}.keras')
 
 test_loss, test_acc = model.evaluate(X_test, y_test, verbose=0)
 
@@ -84,5 +102,5 @@ axs[1].legend()
 axs[1].grid(True)
 
 plt.tight_layout()
-plt.savefig('CNN/accuracy_loss_cnn.png')
+plt.savefig(f'CNN/accuracy_loss_cnn{config["kernel_size"]}l{config["num_conv_layers"]}.png')
 plt.show()
