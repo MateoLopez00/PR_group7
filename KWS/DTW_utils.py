@@ -16,7 +16,7 @@ def extract_word_images(image_path: str, svg_path: str, return_format: str = "PI
 
     Args:
         image_path (str): Path to the full page image (.png or .jpg).
-        svg_path (str): Path to the corresponding SVG file with <polygon> word boundaries.
+        svg_path (str): Path to the corresponding SVG file with <path> word boundaries.
         return_format (str): 'PIL' to return PIL Images, 'numpy' to return NumPy arrays.
 
     Returns:
@@ -32,10 +32,6 @@ def extract_word_images(image_path: str, svg_path: str, return_format: str = "PI
     tree = etree.parse(svg_path)
     root = tree.getroot()
     polygons = root.findall(".//{*}path")
-
-    word_images = []
-
-    
 
     word_images = []
 
@@ -60,7 +56,7 @@ def extract_word_images(image_path: str, svg_path: str, return_format: str = "PI
 
         # Apply mask to image and crop bounding box
         img_np = np.array(image)
-        img_np[mask_np == 0] = (255, 255, 255)  # background → white
+        img_np[mask_np == 0] = (255, 255, 255)  # background -> white
 
         x_min, y_min = points.min(axis=0)
         x_max, y_max = points.max(axis=0)
