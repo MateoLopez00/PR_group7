@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 
 
 def _euclidean(a: np.ndarray, b: np.ndarray) -> float:
@@ -10,21 +11,22 @@ import numpy as np
 from lxml import etree
 import regex as re
 
-def extract_word_images(image_path: str, svg_path: str, return_format: str = "PIL"):
+def extract_word_images(image_nr: int, return_format: str = "PIL"):
     """
     Extract word images from a scanned manuscript page and its corresponding SVG annotation.
 
     Args:
-        image_path (str): Path to the full page image (.png or .jpg).
-        svg_path (str): Path to the corresponding SVG file with <path> word boundaries.
-        return_format (str): 'PIL' to return PIL Images, 'numpy' to return NumPy arrays.
-
+        image_nr (int): Number of the document to be scanned
     Returns:
         List of (word_image, polygon_points) tuples:
             - word_image: Cropped image of the word.
             - polygon_points: Original polygon coordinates as an (N, 2) NumPy array.
+            - location: The location from the transcription DDD-LL-WW
     """
     # Load full page image
+    image_path = f"KWS\images\{image_nr}.jpg"
+    svg_path = f"KWS\locations\{image_nr}.svg"
+
     image = Image.open(image_path).convert("RGB")
     width, height = image.size
 
@@ -35,8 +37,15 @@ def extract_word_images(image_path: str, svg_path: str, return_format: str = "PI
 
     word_images = []
 
+    transcriptions = pd.read_csv("KWS/transcription.tsv", delimiter="\t")
+    # Extract all the lines that correspond to the file
+    doc_nrs = transcriptions[transcriptions.iloc[:,0].str.contains(f"{image_nr}")].iloc[:,0]
+
+    i = 0
     for polygon in polygons:
 
+        location = doc_nrs.iloc[i] # Extract location data for that image
+        i += 1
         # Extract all numeric coordinate pairs
         d = polygon.attrib["d"]
         #coords = re.findall(r"[-+]?\d*\.?\d+(?:[eE][-+]?\d+)?\s+[-+]?\d*\.?\d+", d)
@@ -66,16 +75,43 @@ def extract_word_images(image_path: str, svg_path: str, return_format: str = "PI
         if return_format.lower() == "pil":
             crop = Image.fromarray(crop)
 
-        word_images.append((crop, points))
+        word_images.append((crop, points, location))
 
     return word_images
 
+
+def find_word_image(word, images):
+    """
+    Take a word from keywords.tsv and locate an image with that word in it.
+    Args:
+        - word: a word from the keywords.tsv file
+        - images: the result from the function extract_word_images 
+    Returns: An image of that word
+    """
+    transcriptions = pd.read_csv("KWS/transcription.tsv", delimiter="\t")
+
+    location = transcriptions[transcriptions.iloc[:, 1] == word].iloc[:,0]
+
+    # For now take the first match
+    first_loc = location.iloc[0]
+    for _, (word_img, poly, loc) in enumerate(images):
+        if loc == first_loc:
+            return word_img
+        
+    print("No match found!")
+    return None
+
+
+
+
 if __name__ == "__main__":
-    words = extract_word_images("KWS\images/275.jpg", "KWS/locations/275.svg")
+    words = extract_word_images(272)
 
-    print(f"Extracted {len(words)} word crops")
-
-    # Display or save a few
-    for i, (word_img, poly) in enumerate(words[:3]):
-        word_img.show()  # or word_img.save(f"word_{i}.png")
+    """ # Display or save a few
+    for i, (word_img, poly, loc) in enumerate(words[:3]):
+        print(loc)
+        word_img.show()  # or word_img.save(f"word_{i}.png")  """
+    
+    img = find_word_image("c-a-r-e-f-u-l", words)
+    img.show()
 
