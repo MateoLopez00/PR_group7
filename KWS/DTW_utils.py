@@ -1,5 +1,55 @@
 import numpy as np
 import pandas as pd
+import cv2
+from skimage.filters import threshold_sauvola
+
+def norm_height(img, height=80):
+    # Preprocess the image to have standard height
+    h, w = img.shape
+    new_w = int(w * height / h)
+    return cv2.resize(img, (new_w, height))
+
+def binarize(img):
+    # Preprocessing
+    T = threshold_sauvola(img, window_size=25)
+    return (img < T).astype("uint8")
+
+def preprocess_img(img):
+    # All preprocessing in one function
+    word_img_np = np.array(img)      # PIL → NumPy RGB
+    word_img_gray = cv2.cvtColor(word_img_np, cv2.COLOR_RGB2GRAY)
+    img = norm_height(word_img_gray)
+    img = binarize(img)
+    return img
+
+
+def extract_features(img):
+    """
+    Extract features from a single word image
+    """
+    H, W = img.shape
+    features = []
+
+    for i in range(W):
+        col = img[:,i]
+        black = np.where(col == 1)[0]
+        # Compute Upper and lower Contour
+        if len(black) == 0: 
+            UC, LC = 0, H-1
+        else: 
+            UC, LC = black[0], black[-1]
+
+        transitions = np.count_nonzero(col[:-1] != col[1:])
+        frac_black = np.mean(col)
+        between = col[UC:LC+1] if LC >= UC else []
+        frac_between = np.mean(between) if len(between) > 0 else 0
+
+        features.append([UC/H, LC/H, transitions/10, frac_black, frac_between])
+
+    # Add gradients
+    features = np.array(features)
+    grads = np.gradient(features[:, :2], axis=0)
+    return np.concatenate([features, grads], axis=1)
 
 
 def _euclidean(a: np.ndarray, b: np.ndarray) -> float:
@@ -113,5 +163,7 @@ if __name__ == "__main__":
         word_img.show()  # or word_img.save(f"word_{i}.png")  """
     
     img = find_word_image("c-a-r-e-f-u-l", words)
-    img.show()
+    img = preprocess_img(img)
+    features = extract_features(img)
+    print(features)
 

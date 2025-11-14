@@ -5,7 +5,14 @@ from DTW_utils import _euclidean
 
 
 def DTW(seq1, seq2, win_size=0.5):
-
+    """
+    Calculates the DTW between two feature vectors
+    Args:
+        - seq1: the features of a query image
+        - seq2: the features of every a candidate image
+        Expects seq1 = extract_features(query_img)
+    Returns: Cost matrix for these two images
+    """
     T1 = seq1.shape[0]
     T2 = seq2.shape[0]
 
@@ -20,9 +27,9 @@ def DTW(seq1, seq2, win_size=0.5):
         j_max = min(T2, i + window)
         for j in range(j_min, j_max + 1):
             cost = _euclidean(seq1[i - 1], seq2[j - 1])
-            D[i, j] = cost + min(D[i - 1, j], 
-                                 D[i, j - 1], 
-                                 D[i - 1, j - 1])
+            D[i, j] = cost + min(D[i - 1, j],       #insertion
+                                 D[i, j - 1],       #deletion
+                                 D[i - 1, j - 1])   #match
 
     final_cost = D[T1, T2]
 
