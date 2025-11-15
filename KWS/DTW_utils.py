@@ -2,6 +2,10 @@ import numpy as np
 import pandas as pd
 import cv2
 from skimage.filters import threshold_sauvola
+import os 
+print(os.path)
+
+
 
 def norm_height(img, height=80):
     # Preprocess the image to have standard height
@@ -74,8 +78,8 @@ def extract_word_images(image_nr: int, return_format: str = "PIL"):
             - location: The location from the transcription DDD-LL-WW
     """
     # Load full page image
-    image_path = f"KWS\images\{image_nr}.jpg"
-    svg_path = f"KWS\locations\{image_nr}.svg"
+    image_path = f"images/{image_nr}.jpg"
+    svg_path = f"locations/{image_nr}.svg"
 
     image = Image.open(image_path).convert("RGB")
     width, height = image.size
@@ -87,9 +91,11 @@ def extract_word_images(image_nr: int, return_format: str = "PIL"):
 
     word_images = []
 
-    transcriptions = pd.read_csv("KWS/transcription.tsv", delimiter="\t")
+    transcriptions = pd.read_csv("transcription.tsv", delimiter="\t")
     # Extract all the lines that correspond to the file
     doc_nrs = transcriptions[transcriptions.iloc[:,0].str.contains(f"{image_nr}")].iloc[:,0]
+    print('length doc_nrs', len(doc_nrs))
+    print('length polygons', len(polygons))
 
     i = 0
     for polygon in polygons:
