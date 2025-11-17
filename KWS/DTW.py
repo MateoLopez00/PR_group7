@@ -39,11 +39,11 @@ def DTW(seq1, seq2, win_size=0.5):
     return final_cost
 
 def search(query, candidates, top_k):
-
     scores = []
+
     for seq in candidates:
         dist = DTW(query, seq)
         scores.append(dist)
 
-    scores = scores.sort()
+    scores.sort()      # <-- sortiert in-place, NICHT zuweisen!
     return scores[:top_k]
