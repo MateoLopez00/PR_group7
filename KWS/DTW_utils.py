@@ -2,10 +2,6 @@ import numpy as np
 import pandas as pd
 import cv2
 from skimage.filters import threshold_sauvola
-import os 
-print(os.path)
-
-
 
 def norm_height(img, height=80):
     # Preprocess the image to have standard height

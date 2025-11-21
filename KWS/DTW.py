@@ -38,12 +38,15 @@ def DTW(seq1, seq2, win_size=0.5):
 
     return final_cost
 
-def search(query, candidates, top_k):
-    scores = []
+def search(query_feat, validation_candidates, top_k=None):
+    results = []
 
-    for seq in candidates:
-        dist = DTW(query, seq)
-        scores.append(dist)
+    for entry in validation_candidates:
+        cand_feat = entry["features"]
+        dist = DTW(query_feat, cand_feat)
+        results.append((dist, entry["loc"], entry["word"], entry["features"]))
 
-    scores.sort()      # <-- sortiert in-place, NICHT zuweisen!
-    return scores[:top_k]
+    results.sort(key=lambda x: x[0])
+    if top_k is not None:
+        results = results[:top_k]
+    return results
