@@ -1,10 +1,11 @@
 import numpy as np
 import pandas as pd
-import cv2
 from skimage.filters import threshold_sauvola
 
 def norm_height(img, height=80):
     # Preprocess the image to have standard height
+    import cv2
+
     h, w = img.shape
     new_w = int(w * height / h)
     return cv2.resize(img, (new_w, height))
@@ -16,6 +17,8 @@ def binarize(img):
 
 def preprocess_img(img):
     # All preprocessing in one function
+    import cv2
+
     word_img_np = np.array(img)      # PIL → NumPy RGB
     word_img_gray = cv2.cvtColor(word_img_np, cv2.COLOR_RGB2GRAY)
     img = norm_height(word_img_gray)
