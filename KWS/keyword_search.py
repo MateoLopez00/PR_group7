@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from typing import Dict, Iterable, List, Sequence, Tuple
 
 import numpy as np
+from DTW import DTW
 
 
 @dataclass
@@ -89,26 +90,30 @@ def build_submission(
     win_size: float = 0.1,
     verbose: bool = True,
 ) -> Tuple[Dict[str, KeywordPrototype], List[Tuple[float, str, str, np.ndarray]]]:
-    """Create a submission prediction list for all provided keywords."""
+    """Create a submission prediction list for all provided keywords.
+
+    A Dynamic Time Warping (DTW) distance is computed between each keyword
+    prototype and every validation candidate. Using DTW instead of raw L2 on
+    resampled vectors better preserves the temporal structure of the features
+    and typically yields higher-quality matches.
+    """
 
     prototypes: Dict[str, KeywordPrototype] = {}
     predictions: List[Tuple[float, str, str, np.ndarray]] = []
-
-    val_vectors = np.stack([
-        resample_features(entry["features"]).ravel() for entry in validation_db
-    ])
-    val_meta = [
-        (entry["loc"], entry["word"], entry["features"]) for entry in validation_db
-    ]
 
     for keyword in keywords:
         prototype, _ = keyword_medoid(train_db, keyword, win_size=win_size)
         prototypes[keyword] = prototype
 
-        proto_vec = resample_features(prototype.features).ravel()
-        dists = np.linalg.norm(val_vectors - proto_vec, axis=1)
-        best_idx = int(np.argmin(dists))
-        best = (float(dists[best_idx]), *val_meta[best_idx])
+        best: Tuple[float, str, str, np.ndarray] | None = None
+        for entry in validation_db:
+            dist = float(DTW(prototype.features, entry["features"], win_size=win_size))
+            candidate = (dist, entry["loc"], entry["word"], entry["features"])
+
+            if best is None or dist < best[0]:
+                best = candidate
+
+        assert best is not None  # validation_db is non-empty
         predictions.append(best)
 
         if verbose:
