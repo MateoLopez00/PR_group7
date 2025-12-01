@@ -89,6 +89,8 @@ def extract_word_images(image_nr: int, return_format: str = "PIL"):
     from lxml import etree
     import regex as re
 
+    
+
     image_path = f"images/{image_nr}.jpg"
     svg_path = f"locations/{image_nr}.svg"
 
@@ -163,7 +165,7 @@ def find_word_image(word: str, images, transcription_path: str = "transcription.
 
 if __name__ == "__main__":
     # Tiny self-test (optional)
-    words = extract_word_images(272)
+    words = extract_word_images(305)
     img = find_word_image("c-a-r-e-f-u-l", words)
     if img is not None:
         proc = preprocess_img(img)
