@@ -49,6 +49,9 @@ def computeVelocity(file_path):
 
     cols = ['t', 'x', 'y', 'pressure', 'penup', 'azimuth', 'inclination']
     data = pd.read_csv(file_path, sep="\t", header=None, names=cols)
+    data = data.apply(pd.to_numeric, errors='coerce')
+
+    data = data.sort_values(data.columns[0])
     
     # time difference
     d_t = data["t"].diff().fillna(0.0)
