@@ -37,7 +37,7 @@ def compare():
             seq2 = normalized_verification.select_dtypes(include=["number"]).values
             score = DTW(seq1, seq2, 0.5)
             row.append(score)
-        # Add row to df (does not yet work properly changed the indices of the loops maybe that helps)
+        # Add row to df 
         df.loc[i] = [writer] + row
     return df
 
@@ -46,4 +46,4 @@ if __name__ == "__main__":
     #processFiles("signatures\SignatureVerification_competition\enrollment")
     #processFiles("signatures\SignatureVerification_competition/verification")
     dissim = compare()
-    dissim.to_csv("submission.csv")
+    dissim.to_csv("signatures\SignatureVerification_competition\submission.csv")
