@@ -4,13 +4,9 @@ import pandas as pd
 from pathlib import Path
 
 
-
-
 def _euclidean(a: np.ndarray, b: np.ndarray) -> float:
     """Simple Euclidean distance; DTW.py imports this."""
     return float(np.linalg.norm(a - b))
-
-
 
 def DTW(seq1, seq2, win_size=0.5):
     """
